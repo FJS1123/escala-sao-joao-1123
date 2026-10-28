@@ -372,7 +372,7 @@
             saveDataToFirebase();
         }
 
-        // LEITURA DA ESCALA VIA API DO GEMINI (COM O MODELO ATUALIZADO)
+        // LEITURA DA ESCALA VIA API DO GEMINI (COM O MODELO ATUALIZADO gemini-3.8-flash)
         async function processImageWithAI(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -412,8 +412,8 @@ Retorne APENAS um JSON válido no seguinte formato exato, sem explicações adic
   }
 ]`;
 
-                // Utilizando o modelo gemini-2.0-flash atualizado
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+                // Utilizando o modelo gemini-3.8-flash recomendado
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiApiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
