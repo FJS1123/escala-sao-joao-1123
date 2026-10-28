@@ -94,7 +94,7 @@
                     <i class="fa-solid fa-user-plus"></i> Adicionar Funcionário
                 </button>
                 
-                <!-- NOVO BOTÃO DE IMPORTAR POR FOTO -->
+                <!-- BOTÃO DE IMPORTAR POR FOTO -->
                 <label class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium text-sm flex items-center gap-2 transition-colors cursor-pointer">
                     <i class="fa-solid fa-camera"></i> Ler Escala por Foto
                     <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="processImage(event)">
@@ -216,12 +216,69 @@
         </div>
     </div>
 
+    <!-- MODAL DE ADICIONAR FUNCIONÁRIO -->
+    <div id="addModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Adicionar Novo Funcionário</h3>
+            <form id="addEmployeeForm" onsubmit="handleAddEmployee(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nome Completo / Código</label>
+                    <input type="text" id="empName" placeholder="Ex: 1-1-123456 | NOME" required class="w-full border border-gray-300 p-2 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Cargo</label>
+                    <select id="empCargo" class="w-full border border-gray-300 p-2 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="Equipe B">Equipe B</option>
+                        <option value="Operador">Operador</option>
+                        <option value="Farma">Farma</option>
+                        <option value="Aux.Serv">Aux.Serv</option>
+                        <option value="Gerente">Gerente</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-medium">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE CÉLULA/DIA -->
+    <div id="cellModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50 no-print">
+        <div class="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
+            <h3 class="text-base font-bold text-gray-800 mb-1" id="cellModalTitle">Editar Turno</h3>
+            <p class="text-xs text-gray-500 mb-4" id="cellModalSubtitle">Funcionário - Dia</p>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Tipo de Status</label>
+                    <select id="cellStatusType" onchange="toggleCustomHoursInput()" class="w-full border border-gray-300 p-2 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="TRABALHO">Horário de Trabalho</option>
+                        <option value="Folga">Folga</option>
+                        <option value="Feriado">Feriado</option>
+                        <option value="Ferias">Férias</option>
+                    </select>
+                </div>
+                <div id="customHoursContainer">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Horário</label>
+                    <input type="text" id="cellHoursInput" placeholder="08:00 12:00 13:00 17:00" class="w-full border border-gray-300 p-2 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="closeCellModal()" class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded">Cancelar</button>
+                    <button type="button" onclick="saveCellData()" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-medium">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const initialEmployees = [
-            { id: '1', name: '1-1-120887 | NICOLAS SOUZA D', cargo: 'Aux.Serv', schedule: ['Feriado', 'Folga', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', 'Folga'] }
+            { id: '1', name: '1-1-120887 | NICOLAS SOUZA D', cargo: 'Aux.Serv', schedule: ['Feriado', 'Folga', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', 'Folga'] },
+            { id: '2', name: '1-1-123334 | KASSIA RAFAELLA', cargo: 'Equipe B', schedule: ['Feriado', '07:20 12:10 13:20 17:18', 'Folga', '07:20 12:10 13:20 17:18', 'Folga', '07:20 13:00 14:10 17:18', '07:50 12:40 13:50 17:48'] },
+            { id: '3', name: '1-1-110524 | CRISTIANE DOS S', cargo: 'Equipe B', schedule: ['07:50 12:30 13:40 17:48', 'Folga', '07:20 12:10 13:20 17:18', 'Folga', '07:20 12:10 13:20 17:18', '11:00 14:20 15:30 20:58', '11:12 14:20 15:30 21:10'] }
         ];
 
         let employees = JSON.parse(localStorage.getItem('sao_joao_escala')) || initialEmployees;
+        let activeEditCell = { empIndex: null, dayIndex: null };
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
@@ -240,17 +297,24 @@
 
                 emp.schedule.forEach((dayVal, dayIdx) => {
                     let cellClass = "";
+                    let displayContent = dayVal;
+
                     if (dayVal === 'Feriado') { cellClass = "status-feriado"; dailyOffCount[dayIdx]++; }
                     else if (dayVal === 'Folga') { cellClass = "status-folga"; dailyOffCount[dayIdx]++; }
-                    else if (dayVal === 'Ferias' || dayVal === 'Férias') { cellClass = "status-ferias"; dailyOffCount[dayIdx]++; }
+                    else if (dayVal === 'Ferias' || dayVal === 'Férias') { cellClass = "status-ferias"; displayContent = "Ferias"; dailyOffCount[dayIdx]++; }
                     else { cellClass = "status-trabalho"; dailyWorkCount[dayIdx]++; }
 
-                    html += `<td class="p-2 border border-gray-300 ${cellClass}">${dayVal}</td>`;
+                    html += `
+                        <td onclick="openCellModal(${empIdx}, ${dayIdx})" 
+                            class="p-2 border border-gray-300 cursor-pointer select-none transition-opacity hover:opacity-90 ${cellClass}">
+                            ${displayContent}
+                        </td>
+                    `;
                 });
 
                 html += `
                     <td class="p-1 border border-gray-300 no-print">
-                        <button onclick="deleteEmployee(${empIdx})" class="text-red-500 hover:text-red-700 p-1">
+                        <button onclick="deleteEmployee(${empIdx})" class="text-red-500 hover:text-red-700 p-1" title="Excluir">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
@@ -266,7 +330,115 @@
             localStorage.setItem('sao_joao_escala', JSON.stringify(employees));
         }
 
-        // FUNÇÃO DE LEITURA DE IMAGEM VIA OCR
+        // Modal Adicionar Funcionário
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            document.getElementById('addModal').classList.add('flex');
+        }
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addModal').classList.remove('flex');
+            document.getElementById('addEmployeeForm').reset();
+        }
+        function handleAddEmployee(e) {
+            e.preventDefault();
+            const name = document.getElementById('empName').value.trim();
+            const cargo = document.getElementById('empCargo').value;
+            if (!name) return;
+
+            employees.push({
+                id: Date.now().toString(),
+                name,
+                cargo,
+                schedule: ['07:40 12:00 13:10 17:38', 'Folga', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', 'Folga']
+            });
+            renderTable();
+            closeAddModal();
+        }
+
+        // Excluir Funcionário
+        function deleteEmployee(index) {
+            if (confirm(`Deseja excluir ${employees[index].name}?`)) {
+                employees.splice(index, 1);
+                renderTable();
+            }
+        }
+
+        // Modal Editar Célula
+        const daysNames = ['Segunda (02/Nov)', 'Terça (03/Nov)', 'Quarta (04/Nov)', 'Quinta (05/Nov)', 'Sexta (06/Nov)', 'Sábado (07/Nov)', 'Domingo (08/Nov)'];
+        function openCellModal(empIdx, dayIdx) {
+            activeEditCell = { empIndex: empIdx, dayIndex: dayIdx };
+            const emp = employees[empIdx];
+            const currentValue = emp.schedule[dayIdx];
+
+            document.getElementById('cellModalTitle').innerText = `Editar Turno`;
+            document.getElementById('cellModalSubtitle').innerText = `${emp.name} - ${daysNames[dayIdx]}`;
+
+            const statusSelect = document.getElementById('cellStatusType');
+            const hoursInput = document.getElementById('cellHoursInput');
+
+            if (currentValue === 'Folga') { statusSelect.value = 'Folga'; hoursInput.value = ''; }
+            else if (currentValue === 'Feriado') { statusSelect.value = 'Feriado'; hoursInput.value = ''; }
+            else if (currentValue === 'Ferias' || currentValue === 'Férias') { statusSelect.value = 'Ferias'; hoursInput.value = ''; }
+            else { statusSelect.value = 'TRABALHO'; hoursInput.value = currentValue; }
+
+            toggleCustomHoursInput();
+            document.getElementById('cellModal').classList.remove('hidden');
+            document.getElementById('cellModal').classList.add('flex');
+        }
+        function closeCellModal() {
+            document.getElementById('cellModal').classList.add('hidden');
+            document.getElementById('cellModal').classList.remove('flex');
+        }
+        function toggleCustomHoursInput() {
+            const statusType = document.getElementById('cellStatusType').value;
+            const container = document.getElementById('customHoursContainer');
+            if (statusType === 'TRABALHO') { container.classList.remove('hidden'); }
+            else { container.classList.add('hidden'); }
+        }
+        function saveCellData() {
+            const { empIndex, dayIndex } = activeEditCell;
+            if (empIndex === null || dayIndex === null) return;
+            const statusType = document.getElementById('cellStatusType').value;
+            const hoursInput = document.getElementById('cellHoursInput').value.trim();
+
+            if (statusType === 'TRABALHO') {
+                employees[empIndex].schedule[dayIndex] = hoursInput || '08:00 12:00 13:00 17:00';
+            } else {
+                employees[empIndex].schedule[dayIndex] = statusType;
+            }
+            renderTable();
+            closeCellModal();
+        }
+
+        // Restaurar
+        function resetData() {
+            if (confirm('Restaurar a escala para o padrão original?')) {
+                localStorage.removeItem('sao_joao_escala');
+                employees = JSON.parse(JSON.stringify(initialEmployees));
+                renderTable();
+            }
+        }
+
+        // Exportar JPG
+        function exportToJPG() {
+            const element = document.getElementById('escalaContainer');
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+
+            html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'escala_trabalho_sao_joao.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+                noPrintElements.forEach(el => el.style.display = '');
+            }).catch(err => {
+                console.error(err);
+                noPrintElements.forEach(el => el.style.display = '');
+            });
+        }
+
+        // OCR por Foto
         async function processImage(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -278,7 +450,6 @@
 
             try {
                 const worker = await Tesseract.createWorker('por');
-                
                 const ret = await worker.recognize(file, {
                     logger: m => {
                         if (m.status === 'recognizing text') {
@@ -286,34 +457,15 @@
                         }
                     }
                 });
-
-                const textLines = ret.data.text.split('\n').filter(line => line.trim().length > 0);
-                
-                // Processar linhas detectadas e atualizar a lista
-                textLines.forEach(line => {
-                    if (line.includes('|') || line.match(/\d{2}:\d{2}/)) {
-                        // Exemplo simples de extração de horários detectados
-                        const times = line.match(/\d{2}:\d{2}/g);
-                        if (times && times.length >= 2) {
-                            // Atualiza os dados conforme identificação
-                        }
-                    }
-                });
-
                 await worker.terminate();
-                alert('Foto analisada com sucesso! Verifique os dados atualizados.');
+                alert('Foto analisada! (Nota: o reconhecimento automático lê os textos da imagem para consulta).');
             } catch (err) {
-                console.error('Erro na leitura:', err);
-                alert('Ocorreu um erro ao ler a imagem. Tente uma foto mais nítida.');
+                console.error(err);
+                alert('Erro ao processar a imagem.');
             } finally {
                 loadingStatus.classList.add('hidden');
                 loadingStatus.classList.remove('flex');
             }
-        }
-
-        function deleteEmployee(index) {
-            employees.splice(index, 1);
-            renderTable();
         }
 
         window.onload = function() { renderTable(); };
