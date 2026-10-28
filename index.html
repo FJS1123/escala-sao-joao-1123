@@ -283,7 +283,8 @@
             { id: '9', name: 'EMILY VITORIA B', cargo: 'Operador', schedule: ['11:12 14:40 15:50 21:10', '12:12 15:20 16:30 22:10', 'Folga', '12:12 15:20 16:30 22:10', '12:12 15:20 16:30 22:10', '12:12 15:20 16:30 22:10', 'Folga'] }
         ];
 
-        let employees = JSON.parse(localStorage.getItem('sao_joao_escala')) || initialEmployees;
+        // Atualizado a chave para limpar dados antigos guardados no navegador
+        let employees = JSON.parse(localStorage.getItem('sao_joao_escala_v2')) || initialEmployees;
         let activeEditCell = { empIndex: null, dayIndex: null };
 
         function renderTable() {
@@ -333,7 +334,7 @@
                 document.getElementById(`work-${i}`).innerText = dailyWorkCount[i];
                 document.getElementById(`off-${i}`).innerText = dailyOffCount[i] > 0 ? dailyOffCount[i] : '-';
             }
-            localStorage.setItem('sao_joao_escala', JSON.stringify(employees));
+            localStorage.setItem('sao_joao_escala_v2', JSON.stringify(employees));
         }
 
         // Modal Adicionar Funcionário
@@ -420,7 +421,7 @@
         // Restaurar
         function resetData() {
             if (confirm('Restaurar a escala para o padrão original?')) {
-                localStorage.removeItem('sao_joao_escala');
+                localStorage.removeItem('sao_joao_escala_v2');
                 employees = JSON.parse(JSON.stringify(initialEmployees));
                 renderTable();
             }
