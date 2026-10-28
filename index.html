@@ -288,8 +288,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // CHAVE DA API DO GEMINI EMBUTIDA
-        const GEMINI_API_KEY = "AQ.Ab8RN6L_XyMCboTxDExwUGP4qWey4AE_IX7Lj2o8TJjKCHGwQ";
+        // CHAVE DA API DO GEMINI CORRETA (Formato AIzaSy...)
+        const GEMINI_API_KEY = "AIzaSyD...SUA_CHAVE_AQUI"; // Substitua aqui caso queira gerar uma nova chave limpa no AI Studio que comece por AIzaSy...
 
         const initialEmployees = [
             { id: '1', name: 'NICOLAS SOUZA D', cargo: 'Aux.Serv', schedule: ['Feriado', 'Folga', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', 'Folga'] },
@@ -422,6 +422,13 @@ Retorne APENAS um JSON válido no seguinte formato exato, sem explicações adic
                 });
 
                 const data = await response.json();
+                
+                if (data.error) {
+                    console.error("Erro retornado pela API do Gemini:", data.error);
+                    alert("Erro da IA: " + data.error.message);
+                    return;
+                }
+
                 const jsonText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
                 const parsedEmployees = JSON.parse(jsonText);
 
@@ -434,7 +441,7 @@ Retorne APENAS um JSON válido no seguinte formato exato, sem explicações adic
                 }
 
             } catch (err) {
-                console.error("Erro na IA:", err);
+                console.error("Erro geral na IA:", err);
                 alert("Ocorreu um erro ao processar a imagem com a IA.");
             } finally {
                 loadingStatus.classList.add('hidden');
