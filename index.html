@@ -288,6 +288,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // CHAVE DA API DO GEMINI EMBUTIDA
+        const GEMINI_API_KEY = "AQ.Ab8RN6L_XyMCboTxDExwUGP4qWey4AE_IX7Lj2o8TJjKCHGwQ";
+
         const initialEmployees = [
             { id: '1', name: 'NICOLAS SOUZA D', cargo: 'Aux.Serv', schedule: ['Feriado', 'Folga', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', 'Folga'] },
             { id: '2', name: 'KASSIA RAFAELLA', cargo: 'Equipe B', schedule: ['Feriado', '07:20 12:10 13:20 17:18', 'Folga', '07:20 12:10 13:20 17:18', 'Folga', '07:20 13:00 14:10 17:18', '07:50 12:40 13:50 17:48'] },
@@ -377,19 +380,11 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            let geminiApiKey = localStorage.getItem('gemini_api_key');
-            if (!geminiApiKey) {
-                geminiApiKey = prompt("Para a IA ler a foto, insira a sua chave da API do Gemini (Google AI Studio):");
-                if (!geminiApiKey) return;
-                localStorage.setItem('gemini_api_key', geminiApiKey);
-            }
-
             const loadingStatus = document.getElementById('loadingStatus');
             loadingStatus.classList.remove('hidden');
             loadingStatus.classList.add('flex');
 
             try {
-                // Converter foto para base64
                 const base64Data = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(reader.result.split(',')[1]);
@@ -413,7 +408,7 @@ Retorne APENAS um JSON válido no seguinte formato exato, sem explicações adic
   }
 ]`;
 
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -440,7 +435,7 @@ Retorne APENAS um JSON válido no seguinte formato exato, sem explicações adic
 
             } catch (err) {
                 console.error("Erro na IA:", err);
-                alert("Ocorreu um erro ao processar a imagem com a IA. Verifique se a chave da API está correta.");
+                alert("Ocorreu um erro ao processar a imagem com a IA.");
             } finally {
                 loadingStatus.classList.add('hidden');
                 loadingStatus.classList.remove('flex');
