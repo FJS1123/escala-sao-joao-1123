@@ -101,7 +101,7 @@
                 </label>
 
                 <button onclick="resetData()" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md font-medium text-sm flex items-center gap-2 transition-colors" title="Restaurar dados iniciais">
-                    <i class="fa-solid fa-rotate-left"></i> Restaurar
+                    <i class="fa-solid fa-rotate-left"></i> Restaurar Padrão
                 </button>
             </div>
 
@@ -115,9 +115,9 @@
             </div>
         </div>
 
-        <!-- MENSAGEM DE CARREGAMENTO DO OCR -->
+        <!-- MENSAGEM DE CARREGAMENTO -->
         <div id="loadingStatus" class="hidden mb-4 p-3 bg-purple-50 border border-purple-200 text-purple-800 rounded text-sm font-medium items-center gap-2">
-            <i class="fa-solid fa-spinner fa-spin"></i> Lendo dados da foto... <span id="ocrProgress">0%</span>
+            <i class="fa-solid fa-spinner fa-spin"></i> <span id="loadingText">A processar...</span>
         </div>
 
         <!-- CABEÇALHO SÃO JOÃO -->
@@ -270,7 +270,26 @@
         </div>
     </div>
 
+    <!-- Firebase App (Compat) e Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <script>
+        // CONFIGURAÇÃO DO FIREBASE (Projeto escala-1123)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDKmQFouRbTg0Ta2CrkGi62QyZTGQ8n5qI",
+            authDomain: "escala-1123.firebaseapp.com",
+            projectId: "escala-1123",
+            storageBucket: "escala-1123.firebasestorage.app",
+            messagingSenderId: "871799498973",
+            appId: "1:871799498973:web:7308303f7dc1ef0e4d5334",
+            measurementId: "G-QMW2FLCDKV"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const initialEmployees = [
             { id: '1', name: 'NICOLAS SOUZA D', cargo: 'Aux.Serv', schedule: ['Feriado', 'Folga', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', '07:40 12:00 13:10 17:38', 'Folga'] },
             { id: '2', name: 'KASSIA RAFAELLA', cargo: 'Equipe B', schedule: ['Feriado', '07:20 12:10 13:20 17:18', 'Folga', '07:20 12:10 13:20 17:18', 'Folga', '07:20 13:00 14:10 17:18', '07:50 12:40 13:50 17:48'] },
@@ -283,9 +302,34 @@
             { id: '9', name: 'EMILY VITORIA B', cargo: 'Operador', schedule: ['11:12 14:40 15:50 21:10', '12:12 15:20 16:30 22:10', 'Folga', '12:12 15:20 16:30 22:10', '12:12 15:20 16:30 22:10', '12:12 15:20 16:30 22:10', 'Folga'] }
         ];
 
-        // Atualizado a chave para limpar dados antigos guardados no navegador
-        let employees = JSON.parse(localStorage.getItem('sao_joao_escala_v2')) || initialEmployees;
+        let employees = [];
         let activeEditCell = { empIndex: null, dayIndex: null };
+
+        // Carregar dados direto do Firestore ao abrir
+        function loadDataFromFirebase() {
+            db.collection("escala").doc("dados_atualizados").get().then((doc) => {
+                if (doc.exists && doc.data().employees) {
+                    employees = doc.data().employees;
+                } else {
+                    employees = initialEmployees;
+                    saveDataToFirebase();
+                }
+                renderTable();
+            }).catch((error) => {
+                console.error("Erro ao carregar do Firebase:", error);
+                employees = initialEmployees;
+                renderTable();
+            });
+        }
+
+        // Salvar alterações automaticamente no Firestore
+        function saveDataToFirebase() {
+            db.collection("escala").doc("dados_atualizados").set({
+                employees: employees
+            }).catch((error) => {
+                console.error("Erro ao salvar no Firebase:", error);
+            });
+        }
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
@@ -334,7 +378,8 @@
                 document.getElementById(`work-${i}`).innerText = dailyWorkCount[i];
                 document.getElementById(`off-${i}`).innerText = dailyOffCount[i] > 0 ? dailyOffCount[i] : '-';
             }
-            localStorage.setItem('sao_joao_escala_v2', JSON.stringify(employees));
+
+            saveDataToFirebase();
         }
 
         // Modal Adicionar Funcionário
@@ -421,7 +466,6 @@
         // Restaurar
         function resetData() {
             if (confirm('Restaurar a escala para o padrão original?')) {
-                localStorage.removeItem('sao_joao_escala_v2');
                 employees = JSON.parse(JSON.stringify(initialEmployees));
                 renderTable();
             }
@@ -451,19 +495,14 @@
             if (!file) return;
 
             const loadingStatus = document.getElementById('loadingStatus');
-            const ocrProgress = document.getElementById('ocrProgress');
+            const loadingText = document.getElementById('loadingText');
             loadingStatus.classList.remove('hidden');
             loadingStatus.classList.add('flex');
+            loadingText.innerText = "Lendo dados da foto...";
 
             try {
                 const worker = await Tesseract.createWorker('por');
-                const ret = await worker.recognize(file, {
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            ocrProgress.innerText = Math.round(m.progress * 100) + '%';
-                        }
-                    }
-                });
+                await worker.recognize(file);
                 await worker.terminate();
                 alert('Foto analisada com sucesso!');
             } catch (err) {
@@ -475,7 +514,10 @@
             }
         }
 
-        window.onload = function() { renderTable(); };
+        // Carregar dados do Firebase ao iniciar a página
+        window.onload = function() {
+            loadDataFromFirebase();
+        };
     </script>
 </body>
 </html>
